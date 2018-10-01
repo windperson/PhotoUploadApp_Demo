@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "UploadPhotoFunctionApp": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "PhotoUploadBlobStorage": "local-photo-upload"
+      }
+    }
+  }
+}
