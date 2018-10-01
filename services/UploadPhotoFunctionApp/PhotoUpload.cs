@@ -107,7 +107,7 @@ namespace UploadPhotoFunctionApp
             catch (Exception ex)
             {
                 log.LogError(ex, "processing upload error");
-                return new BadRequestObjectResult(ex);
+                return new BadRequestObjectResult("critical error occurred");
             }
         }
     }
