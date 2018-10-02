@@ -4,11 +4,29 @@
              xmlns:local="clr-namespace:PhotoUploadApp"
              x:Class="PhotoUploadApp.MainPage">
 
-    <StackLayout>
-        <!-- Place new controls here -->
-        <Label Text="Welcome to Xamarin.Forms!" 
-           HorizontalOptions="Center"
-           VerticalOptions="CenterAndExpand" />
-    </StackLayout>
+    <ContentPage.Padding>
+        <OnPlatform x:TypeArguments="Thickness">
+            <On Platform="iOS" Value="0,20,0,0"/>
+        </OnPlatform>
+    </ContentPage.Padding>
+
+
+    <Grid HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Image x:Name="PhotoImage" Aspect="AspectFit" VerticalOptions="Fill" HorizontalOptions="Fill"/>
+
+        <StackLayout Grid.Row="1">
+            <BoxView Color="Coral" HeightRequest="1"></BoxView>
+            <Button x:Name="CameraButton" Text="Take Photo"/>
+            <BoxView Color="Coral" HeightRequest="1"></BoxView>
+            <Editor x:Name="CommentEditor"></Editor>
+            <Button x:Name="UploadButton" Text="Upload Photo"></Button>
+        </StackLayout>
+
+    </Grid>
 
 </ContentPage>
