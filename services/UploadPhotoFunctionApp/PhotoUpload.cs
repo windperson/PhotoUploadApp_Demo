@@ -31,7 +31,7 @@ namespace UploadPhotoFunctionApp
     {
         [FunctionName("upload")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
             [Table("UploadedPhotoInfo")] CloudTable outputUploadInfos,
             Binder binder,
             ILogger log)
