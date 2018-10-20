@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Foundation;
+using Microsoft.Identity.Client;
 using UIKit;
 
 namespace PhotoUploadApp.iOS
@@ -27,5 +28,13 @@ namespace PhotoUploadApp.iOS
 
             return base.FinishedLaunching(app, options);
         }
+
+        //For Azure AD B2C
+        public override bool OpenUrl(UIApplication app, NSUrl url, NSDictionary options)
+        {
+            AuthenticationContinuationHelper.SetAuthenticationContinuationEventArgs(url);
+            return true;
+        }
+
     }
 }

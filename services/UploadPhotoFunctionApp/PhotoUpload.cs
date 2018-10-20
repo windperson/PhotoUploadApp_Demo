@@ -46,10 +46,7 @@ namespace UploadPhotoFunctionApp
             {
                 var comment = string.Empty;
                 var userId = string.Empty;
-                var originFileName = string.Empty;
-                var blobName = string.Empty;
-                var mime = string.Empty;
-
+                
                 foreach (var kv in req.Form)
                 {
                     if (kv.Key == nameof(PhotoInfo.Comment).ToLower())
@@ -69,6 +66,10 @@ namespace UploadPhotoFunctionApp
                     log.LogInformation("no file uploaded!");
                     return new BadRequestResult();
                 }
+
+                var originFileName = string.Empty;
+                var blobName = string.Empty;
+                var mime = string.Empty;
 
                 foreach (var formFile in req.Form.Files)
                 {

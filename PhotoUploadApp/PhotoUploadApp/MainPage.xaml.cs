@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Identity.Client;
 using Plugin.Media.Abstractions;
 using Xamarin.Forms;
 
@@ -15,7 +16,7 @@ namespace PhotoUploadApp
         private MediaFile _photo;
 
         private const string _url =
-            @"the upload url";
+            @"https://photouploadappdemo-api.azurewebsites.net/api/upload?code=2XEqXUnSaCaldczAgia7cFRbeGtZIO6vNbmSbgDP5niVlRD33FfF6w==";
 
         public MainPage()
         {
@@ -47,7 +48,22 @@ namespace PhotoUploadApp
 
             try
             {
+                var accessToken = await GetCachedSignInTokenAsync();
+                if (string.IsNullOrEmpty(accessToken))
+                {
+                    accessToken = await GetSignInToken();
+                }
+
+                if (string.IsNullOrEmpty(accessToken))
+                {
+                    await DisplayAlert("Failed", "Sign in failed", "OK");
+                    return;
+                }
+
                 HttpClient client = new HttpClient();
+
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
                 MultipartFormDataContent content = new MultipartFormDataContent();
 
                 content.Add(new StringContent($"User-{Guid.NewGuid()}"), "userid");
@@ -72,5 +88,76 @@ namespace PhotoUploadApp
                await DisplayAlert("Error", $"ex={ex}", "OK");
             }
         }
+
+
+        private async Task<string> GetSignInToken()
+        {
+            var client = App.AuthClient;
+            try
+            {
+                var loginResult = await client.AcquireTokenAsync(
+                    new string[] {
+                        @"https://netconf2018taichung4demo.onmicrosoft.com/uplaod-api/user_impersonation"
+                       }, 
+                    App.CurrentUiParent);
+                return loginResult.AccessToken;
+            }
+            catch (MsalServiceException ex)
+            {
+                if (ex.ErrorCode == MsalClientException.AuthenticationCanceledError)
+                {
+                    await DisplayAlert("Cancelled", "User cancelled", "Got it");
+                }
+                else if (ex.ErrorCode == "access_denied") // yeah, there's not a constant in the library for this
+                {
+                    await DisplayAlert("Cancelled", "Access denied", "Got it");
+                }
+                else
+                {
+                    await DisplayAlert("Cancelled", $"ex={ex}", "Got it");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"ex={ex}", "OK");
+            }
+
+            return string.Empty;
+        }
+
+
+        private async Task<string> GetCachedSignInTokenAsync()
+        {
+            var client = App.AuthClient;
+            try
+            {
+                var firstAccount = (await client.GetAccountsAsync()).FirstOrDefault();
+
+                if (firstAccount == null )
+                {
+                    return string.Empty;
+                }
+
+                var result = await client.AcquireTokenSilentAsync(
+                    new string[]
+                    {
+                        @"https://netconf2018taichung4demo.onmicrosoft.com/uplaod-api/user_impersonation"
+                    },
+                    firstAccount);
+
+                return result.AccessToken;
+            }
+            catch (MsalUiRequiredException)
+            {
+                await DisplayAlert("warning", "token expired", "OK");
+            }
+            catch (MsalClientException ex)
+            {
+                await DisplayAlert("error", $"ex={ex}", "OK");
+            }
+            return string.Empty;
+        }
+
+
     }
 }
