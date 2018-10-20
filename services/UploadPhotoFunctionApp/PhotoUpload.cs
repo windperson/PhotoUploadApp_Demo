@@ -11,6 +11,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 
@@ -20,8 +21,6 @@ namespace UploadPhotoFunctionApp
     {
         public string OriginFileName { get; set; }
         public string BlobName { get; set; }
-
-        public string MIME { get; set; }
 
         public string UserId { get; set; }
         public string Comment { get; set; }
@@ -46,9 +45,6 @@ namespace UploadPhotoFunctionApp
             {
                 var comment = string.Empty;
                 var userId = string.Empty;
-                var originFileName = string.Empty;
-                var blobName = string.Empty;
-                var mime = string.Empty;
 
                 foreach (var kv in req.Form)
                 {
@@ -72,20 +68,22 @@ namespace UploadPhotoFunctionApp
 
                 foreach (var formFile in req.Form.Files)
                 {
-                    originFileName = formFile.FileName;
-                    mime = formFile.ContentType;
+                    var originFileName = formFile.FileName;
 
                     var blobContainer = Environment.GetEnvironmentVariable("PhotoUploadBlobStorage");
 
-                    blobName = $"{Guid.NewGuid()}_{originFileName}";
+                    var blobName = $"{Guid.NewGuid()}_{originFileName}";
                     var path = $"{blobContainer}/{blobName}";
 
-                    // save the stream to output blob, which will save it to Azure stroage blob
-                    using (Stream outputBlob = await binder.BindAsync<Stream>(new BlobAttribute(path, FileAccess.Write)))
+                    // save the stream to output blob, which will save it to Azure storage blob
+                    var outputBlob = await binder.BindAsync<CloudBlockBlob>(new BlobAttribute(path, FileAccess.Write));
+                    outputBlob.Properties.ContentType = formFile.ContentType;
+                    using (var stream = await outputBlob.OpenWriteAsync())
                     {
-                        await formFile.CopyToAsync(outputBlob);
-                        log.LogInformation($"save {originFileName} to {path}");
+                        await formFile.CopyToAsync(stream);
                     }
+
+                    log.LogInformation($"save {originFileName} to {path}");
 
                     var operation = TableOperation.Insert(new PhotoInfo
                     {
@@ -95,7 +93,7 @@ namespace UploadPhotoFunctionApp
                         Comment = comment,
                         BlobName = blobName,
                         OriginFileName = originFileName,
-                        MIME = mime,
+                        
                         ETag = "*"
                     });
 
